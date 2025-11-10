@@ -19,6 +19,15 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const formatCost = (cents: number | undefined) => {
+    if (!cents) return 'View Event Details';
+    const dollars = cents / 100;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'CAD'
+    }).format(dollars);
+  };
+
   const groupEventsByDay = (events: any[]) => {
     const grouped = new Map();
     
@@ -92,7 +101,7 @@ const Page = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col space-y-4">
             <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
-              TCG Events
+              TCG Event Locator
             </h1>
             <div className="flex space-x-4 border-b border-gray-700">
               <button
@@ -103,7 +112,7 @@ const Page = () => {
                     : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
-                Riftbound
+                RIFTBOUND
               </button>
               <button
                 onClick={() => setActiveTab('lorcana')}
@@ -113,7 +122,7 @@ const Page = () => {
                     : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
-                Disney Lorcana
+                LORCANA
               </button>
             </div>
           </div>
@@ -203,7 +212,7 @@ const Page = () => {
                               rel="noopener noreferrer"
                               className="absolute bottom-6 left-6 right-6 text-center py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-md hover:from-blue-500 hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-800 shadow-lg shadow-blue-500/20"
                             >
-                              View Event Details
+                              {formatCost(item.cost_in_cents)}
                             </a>
                           </li>
                         ))}
