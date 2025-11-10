@@ -126,12 +126,14 @@ const Page = () => {
             <p className="text-lg text-gray-400">Loading events...</p>
           </div>
         )}
+
         {error && (
           <div className="bg-red-900/30 backdrop-blur-sm border border-red-700/50 rounded-lg p-4 mb-6">
             <p className="text-center text-red-400">{error}</p>
           </div>
         )}
-        {data && (
+
+        {data && !loading && (
           <div className="space-y-12">
             {groupEventsByWeek(data).map(([weekStart, daysInWeek]) => (
               <div key={weekStart} className="space-y-8">
@@ -199,7 +201,7 @@ const Page = () => {
                               href={`${EVENTS_URL}${item.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="absolute bottom-4 left-6 right-6 text-center py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-md hover:from-blue-500 hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-800 shadow-lg shadow-blue-500/20"
+                              className="absolute bottom-6 left-6 right-6 text-center py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-md hover:from-blue-500 hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-800 shadow-lg shadow-blue-500/20"
                             >
                               View Event Details
                             </a>
