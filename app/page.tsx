@@ -1,65 +1,105 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React, { useState, useEffect } from 'react'
+
+const API_URL = 'https://api.cloudflare.riftbound.uvsgames.com/hydraproxy/api/v2/events/?start_date_after=2025-11-09T05%3A00%3A00.000Z&display_status=upcoming&latitude=43.7418592&longitude=-79.57345579999999&num_miles=10&upcoming_only=true&game_slug=riftbound&page=1&page_size=250';
+const EVENTS_URL = 'https://locator.riftbound.uvsgames.com/events/';
+
+const Page = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const result = await response.json();
+        let results = result ? result.results : [];
+        setData(results);
+      } catch (error) {
+        setError('Failed to fetch data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="bg-gradient-to-b from-gray-800 to-gray-800/50 shadow-lg border-b border-gray-700/50">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">Riftbound Events</h1>
+          <p className="text-gray-400 mt-2">Find upcoming events near you</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        {loading && (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <p className="text-lg text-gray-400">Loading events...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-900/30 backdrop-blur-sm border border-red-700/50 rounded-lg p-4 mb-6">
+            <p className="text-center text-red-400">{error}</p>
+          </div>
+        )}
+        {data && (
+          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {data.map((item: any) => (
+              <li key={item.id} className="group bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 relative min-h-[280px] border border-gray-700/50 hover:border-blue-500/30">
+                <div className="flex flex-col h-full p-6">
+                  <div className="h-[80px] mb-4 bg-gradient-to-br from-gray-900/80 to-gray-800/80 rounded-md p-4 border border-gray-700/50 group-hover:border-blue-500/30 transition-colors">
+                    <p className="text-blue-400 font-medium text-sm">
+                      {new Date(item.start_datetime).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </p>
+                    <p className="text-blue-300 font-medium text-sm mt-1">
+                      {new Date(item.start_datetime).toLocaleTimeString('en-US', {
+                        timeZone: 'America/New_York',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true,
+                      })} EST
+                    </p>
+                  </div>
+                  <div className="h-[3.5rem] mb-4 flex items-center">
+                    <p className="font-semibold text-gray-200 text-sm line-clamp-2">{item.name}</p>
+                  </div>
+                  <div className="mt-auto mb-[60px]">
+                    {item.store && (
+                      <div className="border-t border-gray-700/50 pt-4">
+                        <p className="font-semibold text-gray-200 text-sm mb-4">{item.store.name}</p>
+                        <p className="text-gray-400 text-sm">{item.store.full_address}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <a 
+                  href={`${EVENTS_URL}${item.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute bottom-6 left-6 right-6 text-center py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-md hover:from-blue-500 hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-800 shadow-lg shadow-blue-500/20"
+                >
+                  View Event Details
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
-  );
+  )
 }
+
+export default Page;
