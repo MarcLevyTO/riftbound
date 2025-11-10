@@ -10,6 +10,50 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const groupEventsByDay = (events: any[]) => {
+    const grouped = new Map();
+    
+    events.forEach(event => {
+      const date = new Date(event.start_datetime);
+      date.setHours(0, 0, 0, 0);
+      const key = date.toISOString();
+      
+      if (!grouped.has(key)) {
+        grouped.set(key, []);
+      }
+      grouped.get(key).push(event);
+    });
+
+    return Array.from(grouped)
+      .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
+  };
+
+  const groupEventsByWeek = (events: any[]) => {
+    const grouped = new Map();
+    
+    events.forEach(event => {
+      const date = new Date(event.start_datetime);
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(date.setDate(diff));
+      monday.setHours(0, 0, 0, 0);
+      
+      const key = monday.toISOString();
+      if (!grouped.has(key)) {
+        grouped.set(key, []);
+      }
+      grouped.get(key).push(event);
+    });
+
+    // Group each week's events by day
+    return Array.from(grouped)
+      .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+      .map(([weekStart, weekEvents]) => [
+        weekStart,
+        groupEventsByDay(weekEvents)
+      ]);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -51,51 +95,77 @@ const Page = () => {
           </div>
         )}
         {data && (
-          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-            {data.map((item: any) => (
-              <li key={item.id} className="group bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 relative min-h-[280px] border border-gray-700/50 hover:border-blue-500/30">
-                <div className="flex flex-col h-full p-6">
-                  <div className="h-[80px] mb-4 bg-gradient-to-br from-gray-900/80 to-gray-800/80 rounded-md p-4 border border-gray-700/50 group-hover:border-blue-500/30 transition-colors">
-                    <p className="text-blue-400 font-medium text-sm">
-                      {new Date(item.start_datetime).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </p>
-                    <p className="text-blue-300 font-medium text-sm mt-1">
-                      {new Date(item.start_datetime).toLocaleTimeString('en-US', {
-                        timeZone: 'America/New_York',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true,
-                      })} EST
-                    </p>
-                  </div>
-                  <div className="h-[3.5rem] mb-4 flex items-center">
-                    <p className="font-semibold text-gray-200 text-sm line-clamp-2">{item.name}</p>
-                  </div>
-                  <div className="mt-auto mb-[60px]">
-                    {item.store && (
-                      <div className="border-t border-gray-700/50 pt-4">
-                        <p className="font-semibold text-gray-200 text-sm mb-4">{item.store.name}</p>
-                        <p className="text-gray-400 text-sm">{item.store.full_address}</p>
-                      </div>
-                    )}
-                  </div>
+          <div className="space-y-12">
+            {groupEventsByWeek(data).map(([weekStart, daysInWeek]) => (
+              <div key={weekStart} className="space-y-8">
+                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
+                  Week of {new Date(weekStart).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </h2>
+                <div className="space-y-8">
+                  {daysInWeek.map(([dayStart, events]: [string, any[]]) => (
+                    <div key={dayStart} className="space-y-4">
+                      <h3 className="text-xl font-semibold text-gray-200 px-2">
+                        {new Date(dayStart).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </h3>
+                      <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                        {events.map((item: any) => (
+                          <li key={item.id} className="group bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 relative min-h-[280px] border border-gray-700/50 hover:border-blue-500/30">
+                            <div className="flex flex-col h-full p-6">
+                              <div className="mb-4">
+                                <p className="text-blue-400 font-semibold text-base">
+                                  {new Date(item.start_datetime).toLocaleDateString('en-US', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                  })}
+                                </p>
+                                <p className="text-blue-300 font-medium text-sm mt-2">
+                                  {new Date(item.start_datetime).toLocaleTimeString('en-US', {
+                                    timeZone: 'America/New_York',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true,
+                                  })} EST
+                                </p>
+                              </div>
+                              <div className="h-[3.5rem] mb-4 flex items-center">
+                                <p className="font-semibold text-gray-200 text-sm line-clamp-2">{item.name}</p>
+                              </div>
+                              <div className="mt-auto mb-[60px]">
+                                {item.store && (
+                                  <div className="border-t border-gray-700/50 pt-4">
+                                    <p className="font-semibold text-gray-200 text-sm mb-4">{item.store.name}</p>
+                                    <p className="text-gray-400 text-sm">{item.store.full_address}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <a 
+                              href={`${EVENTS_URL}${item.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="absolute bottom-6 left-6 right-6 text-center py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-md hover:from-blue-500 hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-800 shadow-lg shadow-blue-500/20"
+                            >
+                              View Event Details
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
-                <a 
-                  href={`${EVENTS_URL}${item.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="absolute bottom-6 left-6 right-6 text-center py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-md hover:from-blue-500 hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-800 shadow-lg shadow-blue-500/20"
-                >
-                  View Event Details
-                </a>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>
