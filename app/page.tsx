@@ -1,11 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 
-const API_URL = 'https://api.cloudflare.riftbound.uvsgames.com/hydraproxy/api/v2/events/?start_date_after=2025-11-09T05%3A00%3A00.000Z&display_status=upcoming&latitude=43.7418592&longitude=-79.57345579999999&num_miles=10&upcoming_only=true&game_slug=riftbound&page=1&page_size=250';
+const getTodayFormatted = () => {
+  const date = new Date();
+  return date.toISOString().replace(/:/g, '%3A');
+};
+
+const TODAY = getTodayFormatted();
+
+const RIFTBOUND_API_URL = `https://api.cloudflare.riftbound.uvsgames.com/hydraproxy/api/v2/events/?start_date_after=${TODAY}&display_status=upcoming&latitude=43.7418592&longitude=-79.57345579999999&num_miles=10&upcoming_only=true&game_slug=riftbound&page=1&page_size=250`;
+const LORCANA_API_URL = `https://api.cloudflare.ravensburgerplay.com/hydraproxy/api/v2/events/?start_date_after=${TODAY}&display_status=upcoming&latitude=43.7418592&longitude=-79.57345579999999&upcoming_only=true&game_slug=disney-lorcana&page=1&page_size=250`;
 const EVENTS_URL = 'https://locator.riftbound.uvsgames.com/events/';
 
 const Page = () => {
+  const [activeTab, setActiveTab] = useState<'riftbound' | 'lorcana'>('riftbound');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,8 +65,11 @@ const Page = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await fetch(API_URL);
+        const apiUrl = activeTab === 'riftbound' ? RIFTBOUND_API_URL : LORCANA_API_URL;
+        const response = await fetch(apiUrl);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
@@ -72,14 +84,39 @@ const Page = () => {
     };
 
     fetchData();
-  }, []);
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="bg-gradient-to-b from-gray-800 to-gray-800/50 shadow-lg border-b border-gray-700/50">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">Riftbound Events</h1>
-          <p className="text-gray-400 mt-2">Find upcoming events near you</p>
+          <div className="flex flex-col space-y-4">
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
+              TCG Events
+            </h1>
+            <div className="flex space-x-4 border-b border-gray-700">
+              <button
+                onClick={() => setActiveTab('riftbound')}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  activeTab === 'riftbound'
+                    ? 'text-blue-400 border-b-2 border-blue-400'
+                    : 'text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                Riftbound
+              </button>
+              <button
+                onClick={() => setActiveTab('lorcana')}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  activeTab === 'lorcana'
+                    ? 'text-blue-400 border-b-2 border-blue-400'
+                    : 'text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                Disney Lorcana
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -117,8 +154,17 @@ const Page = () => {
                       </h3>
                       <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                         {events.map((item: any) => (
-                          <li key={item.id} className="group bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 relative min-h-[280px] border border-gray-700/50 hover:border-blue-500/30">
-                            <div className="flex flex-col h-full p-6">
+                          <li key={item.id} className="group bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 relative min-h-[320px] border border-gray-700/50 hover:border-blue-500/30 flex flex-col overflow-hidden">
+                            {item.full_header_image_url && (
+                              <div className="h-32 w-full bg-black">
+                                <img 
+                                  src={item.full_header_image_url} 
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
+                            <div className="flex flex-col flex-grow p-6">
                               <div className="mb-4">
                                 <p className="text-blue-400 font-semibold text-base">
                                   {new Date(item.start_datetime).toLocaleDateString('en-US', {
@@ -140,7 +186,7 @@ const Page = () => {
                               <div className="h-[3.5rem] mb-4 flex items-center">
                                 <p className="font-semibold text-gray-200 text-sm line-clamp-2">{item.name}</p>
                               </div>
-                              <div className="mt-auto mb-[60px]">
+                              <div className="mt-auto pb-16">
                                 {item.store && (
                                   <div className="border-t border-gray-700/50 pt-4">
                                     <p className="font-semibold text-gray-200 text-sm mb-4">{item.store.name}</p>
@@ -153,7 +199,7 @@ const Page = () => {
                               href={`${EVENTS_URL}${item.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="absolute bottom-6 left-6 right-6 text-center py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-md hover:from-blue-500 hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-800 shadow-lg shadow-blue-500/20"
+                              className="absolute bottom-4 left-6 right-6 text-center py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-md hover:from-blue-500 hover:to-blue-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-800 shadow-lg shadow-blue-500/20"
                             >
                               View Event Details
                             </a>
