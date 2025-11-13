@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Spinner from '../components/Spinner';
-
 import { generateICS, groupEventsByWeek, getRiftboundStoreLink, getLorcanaStoreLink } from '../utils';
-import {stores } from '../seed';
+import { stores } from '../seed';
 
 const page = () => {
   const [storeData, setStoreData] = useState<{ id: number; name: string; full_address: string; riftboundEvents?: any[]; lorcanaEvents?: any[] }[]>([]);

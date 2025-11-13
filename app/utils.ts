@@ -106,3 +106,25 @@ export const getLorcanaStoreLink = (storeId: number) => {
   const today = getTodayFormatted();
   return `https://api.cloudflare.ravensburgerplay.com/hydraproxy/api/v2/events/?start_date_after=${today}&display_status=upcoming&store_id=${storeId}&upcoming_only=true&game_slug=disney-lorcana&page=1&page_size=${PAGE_SIZE}`;
 }
+
+export const getGoogleMapsUrl = (store: any) => {
+  const query = encodeURIComponent(`${store.name} ${store.full_address}`);
+  return `https://www.google.com/maps/search/?api=1&query=${query}`;
+};
+
+export const getEventUrl = (eventId: string, activeTab: string) => {
+  const baseUrl = activeTab === 'riftbound' ? RIFTBOUND_EVENTS_URL : LORCANA_EVENTS_URL;
+  return `${baseUrl}${eventId}`;
+};
+
+export const formatCost = (cents: number | undefined) => {
+  if (!cents) return 'View Event Details';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'CAD'
+  }).format(cents / 100);
+};
+
+export const ensureHttps = (url: string) => {
+  return url.startsWith('https://') ? url : `https://${url}`;
+};
