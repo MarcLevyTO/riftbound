@@ -2,7 +2,7 @@ import { ics } from 'calendar-link';
 
 const LATITUDE = 43.7418592;
 const LONGITUDE = -79.57345579999999;
-const NUM_MILES = 12;
+const NUM_MILES = 15;
 const PAGE_SIZE = 250;
 
 export const generateICS = (event: any) => {
